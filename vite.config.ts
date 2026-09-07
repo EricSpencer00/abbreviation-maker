@@ -4,16 +4,7 @@ import react from "@vitejs/plugin-react"
 import tailwindcss from "@tailwindcss/vite"
 
 export default defineConfig({
+  base: "/abbreviation/",
   plugins: [react(), tailwindcss()],
   resolve: { alias: { "@": path.resolve(__dirname, "./src") } },
-  // Dev hits the Mac Mini through the same tunnel prod uses, so streaming
-  // behaviour is identical in both.
-  server: {
-    proxy: {
-      "/api": {
-        target: process.env.PAL_API || "https://palindrome-api.ericspencer.us",
-        changeOrigin: true, secure: true,
-      },
-    },
-  },
 })
