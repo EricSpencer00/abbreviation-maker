@@ -35,7 +35,7 @@ const general: Record<string, string[]> = {
 }
 
 const topicWords: Record<string, Record<string, string[]>> = {
-  candy: { A: ["Atlanta", "Artisan", "Authority"], C: ["Candy", "Confections", "Confectionery", "Chocolate"], E: ["Edible", "Elevated", "Enjoyable"], I: ["Indulgence", "Ingredients", "Industry"], P: ["Portland", "Premium"], R: ["Retail", "Recipes", "Regional"], S: ["Sweets", "Sugar", "Shop"], T: ["Treats", "Taste"] },
+  candy: { A: ["Agency", "Authority", "Atlanta", "Artisan"], C: ["Confections", "Candy", "Confectionery", "Chocolate"], E: ["Expertly", "Edible", "Elevated", "Enjoyable"], I: ["Indulgent", "Ingredients", "Industry", "Indulgence"], P: ["Portland", "Premium"], R: ["Refined", "Regional", "Retail", "Recipes"], S: ["Sweets", "Sugar", "Shop"], T: ["Treats", "Taste"] },
   music: { A: ["Artists", "Audio"], B: ["Bands", "Beats"], C: ["Concert", "Composition"], I: ["Instruments", "Independent"], M: ["Music", "Musicians", "Melody"], R: ["Records", "Rhythm"], S: ["Sound", "Songs", "Studio"] },
   tech: { A: ["Automation", "Applied"], C: ["Computing", "Code"], D: ["Digital", "Data"], I: ["Intelligence", "Infrastructure"], N: ["Network"], S: ["Software", "Systems"], T: ["Technology", "Tools"] },
 }
@@ -56,14 +56,14 @@ function topicFor(meaning: string) {
 function options(letter: string, meaning: string) {
   const topic = topicWords[topicFor(meaning)]?.[letter] ?? []
   const supplied = meaning.split(/\s+/).map((w) => w.replace(/[^a-z]/gi, "")).filter((w) => w[0]?.toUpperCase() === letter).map(titleCase)
-  return [...new Set([...supplied, ...topic, ...(general[letter] ?? [letter])])]
+  return [...new Set([...topic, ...supplied, ...(general[letter] ?? [letter])])]
 }
 
 function expansions(abbreviation: string, meaning: string): Result[] {
   const letters = (abbreviation || initials(meaning) || "IDEA").toUpperCase().replace(/[^A-Z]/g, "").slice(0, 8)
-  const rows = Array.from({ length: 12 }, (_, variant) => letters.split("").map((letter, position) => {
+  const rows = Array.from({ length: 12 }, (_, variant) => letters.split("").map((letter) => {
     const pool = options(letter, meaning)
-    return pool[(variant + position * 2) % pool.length]
+    return pool[variant % pool.length]
   }).join(" "))
   const scored = [...new Set(rows)].sort((a, b) => scoreExpansion(b, letters, meaning) - scoreExpansion(a, letters, meaning))
   return scored.slice(0, 5).map((detail, index) => ({ title: letters, detail, kind: index === 0 ? "best fit" : index < 3 ? "strong" : "unexpected" }))
