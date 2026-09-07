@@ -40,10 +40,9 @@ const topicWords: Record<string, Record<string, string[]>> = {
   tech: { A: ["Automation", "Applied"], C: ["Computing", "Code"], D: ["Digital", "Data"], I: ["Intelligence", "Infrastructure"], N: ["Network"], S: ["Software", "Systems"], T: ["Technology", "Tools"] },
 }
 
-const connectors = new Set(["a", "an", "and", "for", "in", "of", "on", "the", "to", "with"])
 const clean = (value: string) => value.trim().replace(/\s+/g, " ")
 const titleCase = (value: string) => value.replace(/\b\w/g, (c) => c.toUpperCase())
-const initials = (value: string) => value.split(/\s+/).filter((w) => !connectors.has(w.toLowerCase())).map((w) => w.match(/[a-z]/i)?.[0] ?? "").join("").toUpperCase()
+const initials = (value: string) => value.split(/\s+/).map((w) => w.match(/[a-z]/i)?.[0] ?? "").join("").toUpperCase()
 
 function topicFor(meaning: string) {
   const lower = meaning.toLowerCase()
@@ -65,18 +64,8 @@ function expansions(abbreviation: string, meaning: string): Result[] {
     const pool = options(letter, meaning)
     return pool[variant % pool.length]
   }).join(" "))
-  const scored = [...new Set(rows)].sort((a, b) => scoreExpansion(b, letters, meaning) - scoreExpansion(a, letters, meaning))
+  const scored = [...new Set(rows)]
   return scored.slice(0, 5).map((detail, index) => ({ title: letters, detail, kind: index === 0 ? "best fit" : index < 3 ? "strong" : "unexpected" }))
-}
-
-function scoreExpansion(phrase: string, letters: string, meaning: string) {
-  const words = phrase.split(" ")
-  const exact = words.filter((word, i) => word[0]?.toUpperCase() === letters[i]).length * 20
-  const topic = topicFor(meaning)
-  const topical = words.filter((word) => Object.values(topicWords[topic] ?? {}).flat().includes(word)).length * 9
-  const supplied = words.filter((word) => meaning.toLowerCase().includes(word.toLowerCase())).length * 12
-  const repeats = words.length - new Set(words).size
-  return exact + topical + supplied - repeats * 30 - phrase.length * .03
 }
 
 function alternatives(meaning: string, abbreviation: string): Result[] {
@@ -85,8 +74,11 @@ function alternatives(meaning: string, abbreviation: string): Result[] {
   const candidates: string[] = [titleCase(subject)]
   const subjectWords = titleCase(subject).split(" ")
   if (topic) {
-    const patterns = topic === "candy" ? ["PCA", "CAA", "CIG", "PCT", "CDA", "SAT"] : topic === "music" ? ["IMS", "MAS", "SOUND", "MIX"] : ["AIT", "CIS", "DIGI", "STACK"]
-    for (const pattern of patterns) candidates.push(pattern.split("").map((letter, i) => options(letter, subject)[i % options(letter, subject).length]).join(" "))
+    if (topic === "candy") candidates.push("Portland Candy Authority", "Candy Appreciation Alliance", "Candy Intelligence Group", "Portland Confectionery Trust", "Confectionery Development Authority")
+    else {
+      const patterns = topic === "music" ? ["IMS", "MAS", "SOUND", "MIX"] : ["AIT", "CIS", "DIGI", "STACK"]
+      for (const pattern of patterns) candidates.push(pattern.split("").map((letter) => options(letter, subject)[0]).join(" "))
+    }
   }
   candidates.push(`${subjectWords[0]} ${general.A[0]}`, `${general.C[0]} ${subjectWords.at(-1)}`)
   return [...new Set(candidates)].map((detail) => ({ title: initials(detail) || abbreviation.toUpperCase(), detail, kind: "alternative" })).filter((r) => r.title.length > 1).slice(0, 5).map((r, i) => ({ ...r, kind: i === 0 ? "direct" : i < 3 ? "clean" : "surprising" }))
