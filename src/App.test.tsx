@@ -36,4 +36,14 @@ describe("abbreviation expansion quality", () => {
     expect(screen.getAllByText("CIA", { exact: true })).toHaveLength(5)
     expect(screen.getAllByText(/Candy/).length).toBeGreaterThan(0)
   })
+
+  it("keeps punctuation-delimited meaning words in the fallback acronym", () => {
+    generate("!!!", "candy-in-Atlanta")
+
+    const meaningResults = screen.getAllByRole("article").slice(0, 5)
+    expect(meaningResults).toHaveLength(5)
+    expect(meaningResults.every((article) => article.querySelector("strong")?.textContent === "CIA")).toBe(true)
+    expect(screen.getAllByText("CIA", { exact: true })).toHaveLength(5)
+    expect(screen.getAllByText(/Candy/).length).toBeGreaterThan(0)
+  })
 })

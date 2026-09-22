@@ -119,12 +119,14 @@ const stemSuffixes = ["ing", "ed", "es", "s", "ly", "tion", "ment", "ness", "shi
 
 const clean = (value: string) => value.trim().replace(/\s+/g, " ")
 const titleCase = (value: string) => value.replace(/\b\w/g, (c) => c.toUpperCase())
-const initials = (value: string) =>
-  value
-  .split(/\s+/)
-  .map((w) => w.match(/[a-z]/i)?.[0] ?? "")
-  .join("")
-  .toUpperCase()
+const initials = (value: string) => {
+  const withoutDiacritics = value.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  return withoutDiacritics
+    .split(/[^\p{L}\p{N}]+/u)
+    .map((word) => word.match(/[a-z]/i)?.[0] ?? "")
+    .join("")
+    .toUpperCase()
+}
 
 function tokenize(value: string) {
   return clean(value)
