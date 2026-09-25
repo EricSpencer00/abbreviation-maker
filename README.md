@@ -1,6 +1,6 @@
-# /meaning
+# /abbreviation
 
-A tiny phrase and abbreviation generator. Enter an abbreviation, a meaning, or both. `/meaning` returns five possible interpretations and five alternatives.
+A tiny phrase and abbreviation generator. Enter an abbreviation, a meaning, or both. `/abbreviation` returns five possible interpretations and five alternatives.
 
 ## Development
 
