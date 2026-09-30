@@ -42,7 +42,7 @@ const topicWords: Record<string, Record<string, string[]>> = {
 
 const clean = (value: string) => value.trim().replace(/\s+/g, " ")
 const titleCase = (value: string) => value.replace(/\b\w/g, (c) => c.toUpperCase())
-const initials = (value: string) => value.split(/\s+/).map((w) => w.match(/[a-z]/i)?.[0] ?? "").join("").toUpperCase()
+const initials = (value: string) => (value.match(/[a-z]+/gi) ?? []).map((w) => w.charAt(0)).join("").toUpperCase()
 
 function topicFor(meaning: string) {
   const lower = meaning.toLowerCase()
@@ -54,12 +54,13 @@ function topicFor(meaning: string) {
 
 function options(letter: string, meaning: string) {
   const topic = topicWords[topicFor(meaning)]?.[letter] ?? []
-  const supplied = meaning.split(/\s+/).map((w) => w.replace(/[^a-z]/gi, "")).filter((w) => w[0]?.toUpperCase() === letter).map(titleCase)
+  const supplied = (meaning.match(/[a-z]+/gi) ?? []).filter((w) => w.charAt(0).toUpperCase() === letter).map(titleCase)
   return [...new Set([...topic, ...supplied, ...(general[letter] ?? [letter])])]
 }
 
 function expansions(abbreviation: string, meaning: string): Result[] {
-  const letters = (abbreviation || initials(meaning) || "IDEA").toUpperCase().replace(/[^A-Z]/g, "").slice(0, 8)
+  const cleanAbbr = abbreviation.toUpperCase().replace(/[^A-Z]/g, "")
+  const letters = (cleanAbbr || initials(meaning) || "IDEA").slice(0, 8)
   const rows = Array.from({ length: 12 }, (_, variant) => letters.split("").map((letter) => {
     const pool = options(letter, meaning)
     return pool[variant % pool.length]
@@ -72,7 +73,7 @@ function alternatives(meaning: string, abbreviation: string): Result[] {
   const subject = clean(meaning) || "creative ideas"
   const topic = topicFor(subject)
   const candidates: string[] = [titleCase(subject)]
-  const subjectWords = titleCase(subject).split(" ")
+  const subjectWords = (subject.match(/[a-z]+/gi) ?? ["creative", "ideas"]).map(titleCase)
   if (topic) {
     if (topic === "candy") candidates.push("Portland Candy Authority", "Candy Appreciation Alliance", "Candy Intelligence Group", "Portland Confectionery Trust", "Confectionery Development Authority")
     else {
@@ -81,7 +82,8 @@ function alternatives(meaning: string, abbreviation: string): Result[] {
     }
   }
   candidates.push(`${subjectWords[0]} ${general.A[0]}`, `${general.C[0]} ${subjectWords.at(-1)}`)
-  return [...new Set(candidates)].map((detail) => ({ title: initials(detail) || abbreviation.toUpperCase(), detail, kind: "alternative" })).filter((r) => r.title.length > 1).slice(0, 5).map((r, i) => ({ ...r, kind: i === 0 ? "direct" : i < 3 ? "clean" : "surprising" }))
+  const cleanAbbr = abbreviation.toUpperCase().replace(/[^A-Z]/g, "")
+  return [...new Set(candidates)].map((detail) => ({ title: initials(detail) || cleanAbbr, detail, kind: "alternative" })).filter((r) => r.title.length > 1).slice(0, 5).map((r, i) => ({ ...r, kind: i === 0 ? "direct" : i < 3 ? "clean" : "surprising" }))
 }
 
 export default function App() {
